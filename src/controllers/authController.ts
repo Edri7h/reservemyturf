@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import Turf from "../models/Turf.js";
 import { Otp } from "../models/Otp.js";
-import {Resend} from "resend";
+import { Resend } from "resend";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -25,8 +25,8 @@ interface AuthRequestBody {
 //     const existing = await User.findOne({ email });
 //     if (existing) return res.status(400).json({ msg: "Email already registered" });
 
-    
-    
+
+
 
 //     const user = new User({
 //       name,
@@ -45,8 +45,8 @@ interface AuthRequestBody {
 // };
 
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
-
+const resendAdmin = new Resend(process.env.RESEND_API_KEY!);
+const resendUser = new Resend(process.env.RESEND_API_KEYY!);
 // REGISTER with OTP flow
 
 
@@ -83,27 +83,43 @@ export const register = async (
     });
 
     // Send OTP via email using Resend
-    await resend.emails.send({
-      from: "MyApp <noreply@resend.dev>",
-      to: email,
-      subject: "Verify Your Account",
-      html: `
+    if (role === "owner") {
+      await resendAdmin.emails.send({
+        from: "MyApp <noreply@resend.dev>",
+        to: email,
+        subject: "Verify Your Account",
+        html: `
         <p>Hi ${name},</p>
-        <p>Your verification OTP is <strong>${otp}</strong>. It will expire in 10 minutes.</p>
+        <p>Your verification code is <strong>${otp}</strong>. It will expire in 10 minutes.</p>
         <p>Do not share this code with anyone.</p>
       `,
-    });
+      });
+    }
+    if (role === 'user') {
+      console.log("kkkkk")
+      await resendUser.emails.send({
+        from: "MyApp <noreply@resend.dev>",
+        to: email,
+        subject: "Verify Your Account",
+        html: `
+        <p>Hi ${name},</p>
+        <p>Your verification Code is <strong>${otp}</strong>. It will expire in 10 minutes.</p>
+        <p>Do not share this code with anyone.</p>
+      `,
+      });
+    }
 
     return res.status(201).json({ msg: "User registered. OTP sent to email." });
   } catch (err) {
     console.error("Registration error:", err);
     return res.status(500).json({ msg: "Server error" });
   }
+
 };
 
 
 // LOGIN
-export const login = async (req: Request<{}, {}, AuthRequestBody>, res:Response) => {
+export const login = async (req: Request<{}, {}, AuthRequestBody>, res: Response) => {
   try {
     const { email, password } = req.body;
     // console.log("LOGIN PAYLOAD:", req.body);
@@ -115,26 +131,27 @@ export const login = async (req: Request<{}, {}, AuthRequestBody>, res:Response)
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid email or password" });
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET as string, {
+    const token = jwt.sign({ id: user._id, role: user.role,email:user.email }, process.env.JWT_SECRET as string, {
       expiresIn: '7d'
     });
 
     res
-  .cookie("token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // only send over HTTPS in production
-    sameSite: "lax", // or "strict" depending on CSRF risk
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-  })
-  .status(200)
-  .json({
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role
-    }
-  });
+      .cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // only send over HTTPS in production
+        sameSite: "lax", // or "strict" depending on CSRF risk
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      })
+      .status(200)
+      .json({
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          token
+        }
+      });
 
   } catch (err) {
     console.error(err);
@@ -144,7 +161,7 @@ export const login = async (req: Request<{}, {}, AuthRequestBody>, res:Response)
 
 
 //verify->otp
-export const verifyOtp = async (req:Request, res:Response) => {
+export const verifyOtp = async (req: Request, res: Response) => {
   const { email, otp } = req.body;
 
   try {
@@ -189,12 +206,23 @@ export const resendOtp = async (req: Request, res: Response) => {
     expiresAt: new Date(Date.now() + 10 * 60 * 1000),
   });
 
-  await resend.emails.send({
+  if(user.role==='owner'){
+    await resendAdmin.emails.send({
     from: 'MyApp <noreply@resend.dev>',
     to: email,
-    subject: 'Your new OTP',
-    html: `<p>Your new OTP is <strong>${otp}</strong>.</p>`
+    subject: 'Verification Code',
+    html: `<p>Verification code is <strong>${otp}</strong>.</p>`
   });
+}
+ if(user.role==='user') 
+  { console.log("kkkk")
+    await resendUser.emails.send({
+    from: "MyApp <noreply@resend.dev>",
+    to: email,
+   subject: 'Verification Code',
+    html: `<p>Verification code is <strong>${otp}</strong>.</p>`,
+  });
+}
 
   res.status(200).json({ msg: 'OTP resent' });
 };
@@ -207,3 +235,16 @@ export const logout = (req: Request, res: Response) => {
 
 
 
+export const resetPassword=async(req:Request,res:Response)=>{
+    const {password , confirmPassword,email} =req.body;
+    if([password,confirmPassword].some(field=>field.trim()==='')){
+      return res.status(400).json({msg:"Invalid details"});
+
+    }
+
+    if(password!==confirmPassword){
+       return res.status(400).json({msg:"Invalid details"});
+    }
+
+
+}

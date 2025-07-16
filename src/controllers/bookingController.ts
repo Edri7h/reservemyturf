@@ -4,6 +4,11 @@ import Booking from "../models/Booking.js";
 import { generateSlots } from "../utils/slotUtils.js";
 import { generateTicketCode } from "../utils/ticketCode.js";
 import redis from "../utils/redisClient.js";
+import dayjs from "dayjs";
+import { Resend } from "resend";
+const resendTicket = new Resend(process.env.RESEND_API_KEYY!); 
+
+
 
 export const checkAvailability = async (req: Request, res: Response) => {
   const { turfId, date } = req.query;
@@ -41,17 +46,14 @@ export const checkAvailability = async (req: Request, res: Response) => {
 
 // booking 
 
-import dayjs from "dayjs";
-import mongoose from "mongoose";
 
 
- // your configured Redis client
-// import { generateTicketCode } from "../utils/generateTicketCode"; // your ticket code function
 
 export const createBooking = async (req: Request, res: Response) => {
   try {
     const { turfId, date, slot, numPlayers } = req.body;
     const userId = req.user?.id;
+    const userEmail= req.user?.email
 
     // 1. Validate required fields
     if (!turfId || !date || !slot || !numPlayers) {
@@ -108,6 +110,25 @@ export const createBooking = async (req: Request, res: Response) => {
     // 8. Invalidate Redis cache
     const cacheKey = `availability:${turfId}:${date}`;
     await redis.del(cacheKey);
+     if (userEmail) {
+      await resendTicket.emails.send({
+        from:"@TurfHelp <noreply@resend.dev>",
+        to: userEmail,
+        subject: "Your Turf Booking Ticket",
+        html: `
+          <p>Hi User,</p>
+          <p>Your booking for <strong>${turf.name}</strong> is confirmed.</p>
+          <ul>
+            <li><strong>Date:</strong> ${dayjs(date).format("DD MMM YYYY")}</li>
+            <li><strong>Slot:</strong> ${slot}</li>
+            <li><strong>Players:</strong> ${numPlayers}</li>
+            <li><strong>Ticket Code:</strong> <code>${ticketCode}</code></li>
+          </ul>
+          <p>Show this code at the turf counter to verify your booking.</p>
+        `
+      });
+    }
+
 
     // 9. Return success
     return res.status(201).json({

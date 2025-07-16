@@ -21,7 +21,7 @@ const MONGO_URI = process.env.MONGO_URI || "";
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // frontend origin
+    origin: true, // frontend origin
     credentials: true,               //  allow cookies/token
   })
 );
@@ -43,7 +43,7 @@ app.get("/", (_req, res) => {
 
 // Connect to MongoDB and start server
 mongoose
-  .connect(MONGO_URI)
+  .connect(MONGO_URI!)
   .then(() => {
     console.log("✅ MongoDB connected");
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

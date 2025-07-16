@@ -11,6 +11,7 @@ declare module "express" {
     user?: {
       id: string;
       role: string;
+      email:string;
     };
   }
 }
@@ -19,9 +20,10 @@ declare module "express" {
 type decodedToken = {
     id: string;
     role: string;
+    email:string;
 }
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-  console.log("👉 COOKIES IN REQUEST:", req.cookies);
+  // console.log("👉 COOKIES IN REQUEST:", req.cookies);
   try {
     const token = req.cookies.token
     if (!token) return res.status(401).json({ msg: "Login to Continue" });
@@ -31,7 +33,8 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     // Attach user info to request object
     req.user ={
         id:decoded.id,
-        role: decoded.role
+        role: decoded.role,
+        email:decoded.email,
     }
     
     next();
