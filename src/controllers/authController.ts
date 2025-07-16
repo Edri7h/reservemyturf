@@ -138,8 +138,8 @@ export const login = async (req: Request<{}, {}, AuthRequestBody>, res: Response
     res
       .cookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production", // only send over HTTPS in production
-        sameSite: "lax", // or "strict" depending on CSRF risk
+        secure: true, // only send over HTTPS in production
+        sameSite: "none", // or "strict" depending on CSRF risk
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       })
       .status(200)
