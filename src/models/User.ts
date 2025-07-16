@@ -2,12 +2,18 @@
 import mongoose, {Document, Model,Schema}  from "mongoose";
 import bcrypt from "bcrypt";
 
+
+
 export  interface UserI extends Document{
     name:string,
+    isVerified:boolean,
     email:string,
     password:string,
     role:'user' | 'owner'
 }
+
+
+
 
 
 const userSchema:Schema<UserI>= new mongoose.Schema({
@@ -15,6 +21,10 @@ const userSchema:Schema<UserI>= new mongoose.Schema({
     type: String,
     required: true,
     trim: true
+  },
+  isVerified:{
+    type: Boolean,
+    default:false
   },
 
   email: {
@@ -37,11 +47,6 @@ const userSchema:Schema<UserI>= new mongoose.Schema({
 
 }, { timestamps: true });
 
-const User:Model<UserI> = mongoose.model<UserI>('User', userSchema);
-export default User;
-
-
-
 
 userSchema.pre<UserI>('save', async function (next) {
   if (!this.isModified('password')) return next();
@@ -55,3 +60,10 @@ userSchema.pre<UserI>('save', async function (next) {
     return next(error as Error);
   }
 });
+
+const User:Model<UserI> = mongoose.model<UserI>('User', userSchema);
+export default User;
+
+
+
+

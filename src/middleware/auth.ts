@@ -21,9 +21,10 @@ type decodedToken = {
     role: string;
 }
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+  console.log("👉 COOKIES IN REQUEST:", req.cookies);
   try {
     const token = req.cookies.token
-    if (!token) return res.status(401).json({ msg: "No token provided" });
+    if (!token) return res.status(401).json({ msg: "Login to Continue" });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as decodedToken;
     

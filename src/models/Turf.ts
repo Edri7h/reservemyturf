@@ -9,7 +9,11 @@ export interface turfSchemaI{
     closeTime:string,
     pricePerSlot:number,
     maxPlayers:number,
-    images:string[]
+    images:string[],
+    averageRating:number,
+    numReviews:number,
+    isActive?:boolean,
+    googleMapLink?:string
 }
 
 const turfSchema:Schema<turfSchemaI> = new mongoose.Schema({
@@ -30,14 +34,22 @@ const turfSchema:Schema<turfSchemaI> = new mongoose.Schema({
   },
 
   openTime: {
-    type: String, // e.g., "06:00"
-    required: true
-  },
-
+  type: String,
+  default: "06:00"
+},
+  isActive: {
+  type: Boolean,
+  default: true,
+},
   closeTime: {
-    type: String, // e.g., "22:00"
-    required: true
-  },
+  type: String,
+  default: "22:00"
+},
+  googleMapLink: {
+  type: String,
+  required: false, // or `true` if you want to enforce it
+},
+
 
   pricePerSlot: {
     type: Number,
@@ -52,7 +64,16 @@ const turfSchema:Schema<turfSchemaI> = new mongoose.Schema({
   images: {
     type: [String], // array of image URLs
     default: []
-  }
+  },
+  averageRating: {
+  type: Number,
+  default: 0
+},
+numReviews: {
+  type: Number,
+  default: 0
+}
+
 
 }, { timestamps: true });
 

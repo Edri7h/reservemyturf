@@ -9,6 +9,8 @@ export interface BookingI extends Document {
   numPlayers: number;
   ticketCode: string;
   status: 'booked' | 'cancelled';
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // Booking schema definition
