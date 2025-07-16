@@ -38,7 +38,7 @@ app.use("/api/owner", ownerRoutes);
 
 // Root route
 app.get("/", (_req, res) => {
-  res.send("Turf Booking API is running 🚀");
+  res.send("Turf Booking API is running!!!! 🚀");
 });
 
 // Connect to MongoDB and start server
