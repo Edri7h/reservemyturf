@@ -21,7 +21,7 @@ const MONGO_URI = process.env.MONGO_URI || "";
 
 app.use(
   cors({
-    origin: true, // frontend origin
+    origin: "https://reserve-my-turf-client.vercel.app/", // frontend origin
     credentials: true,               //  allow cookies/token
   })
 );
