@@ -230,7 +230,14 @@ export const resendOtp = async (req: Request, res: Response) => {
 
 
 export const logout = (req: Request, res: Response) => {
-  res.clearCookie("token").json({ msg: "Logged out successfully" });
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/", // 👈 must match login
+  });
+
+  res.json({ msg: "Logged out successfully" });
 };
 
 
